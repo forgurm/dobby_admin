@@ -1,5 +1,4 @@
 import mysql from 'mysql2/promise';
-import { RowDataPacket } from 'mysql2/promise';
 
 export const db = mysql.createPool({
   host: 'forgurm.iptime.org',
@@ -9,12 +8,19 @@ export const db = mysql.createPool({
   charset: 'utf8mb4'
 });
 
-export async function verifyAdmin(id: string, password: string) {
-  console.log('Verifying admin with ID:', id);
-  const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM users WHERE emailid = ? AND password = ?', [id, password]);
-  console.log('Query result:', rows);
-  if (rows.length > 0) {
-    return rows[0];
-  }
-  return null;
-}
+export type User = {
+  no: number;
+  emailid: string;
+  name: string;
+  phone: string;
+  add1: string;
+  add2: string | null;
+  referral_exchange: string | null;
+  referral_code: string | null;
+  lv: number;
+  status: string;
+  memo: string | null;
+  creat_dt: Date;
+  update_dt: Date;
+  password?: string;
+};

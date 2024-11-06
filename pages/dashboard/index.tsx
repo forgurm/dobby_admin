@@ -2,10 +2,42 @@ import React from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Link from 'next/link';
+import { GetServerSideProps } from 'next';
+import { getUserStats } from '../../lib/users';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-export default function Dashboard() {
+interface DashboardProps {
+  userStats: {
+    referralCount: number;
+    nonReferralCount: number;
+    rejectedCount: number;
+  };
+}
+
+export const getServerSideProps: GetServerSideProps<DashboardProps> = async () => {
+  try {
+    const userStats = await getUserStats();
+    return {
+      props: {
+        userStats
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    return {
+      props: {
+        userStats: {
+          referralCount: 0,
+          nonReferralCount: 0,
+          rejectedCount: 0
+        }
+      }
+    };
+  }
+};
+
+export default function Dashboard({ userStats }: DashboardProps) {
   const barData = {
     labels: ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'],
     datasets: [
@@ -56,7 +88,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Dashboard Page</h1>
+      <h1 className="text-2xl font-bold mb-4">대시보드</h1>
       {/* 회원수 섹션 */}
       <section className="mb-8">
         <div className="flex justify-between items-center">
@@ -68,15 +100,15 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-4">
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">레퍼럴 사용자</h3>
-            <p className="text-lg">100명</p>
+            <p className="text-lg">{userStats.referralCount}명</p>
           </div>
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">미사용자</h3>
-            <p className="text-lg">50명</p>
+            <p className="text-lg">{userStats.nonReferralCount}명</p>
           </div>
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">거절</h3>
-            <p className="text-lg">10명</p>
+            <p className="text-lg">{userStats.rejectedCount}명</p>
           </div>
         </div>
       </section>

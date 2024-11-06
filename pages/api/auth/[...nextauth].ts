@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { verifyAdmin } from '../../../lib/db';
+import { verifyAdmin } from '../../../lib/auth';
 
 // Session 타입 확장
 declare module "next-auth" {

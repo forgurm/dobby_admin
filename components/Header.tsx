@@ -1,8 +1,10 @@
+import { useRouter } from 'next/router';
 import { signOut } from 'next-auth/react';
 
 export default function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
+  const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // NextAuth의 signOut 함수 사용
     signOut({ callbackUrl: '/login' });
   };
@@ -25,7 +27,7 @@ export default function Header({ toggleSidebar }: { toggleSidebar: () => void })
       </p>
       <button
         className="p-2 bg-gray-800 text-white rounded ml-auto"
-        onClick={handleLogout}  
+        onClick={handleLogout}
       >
         로그아웃
       </button>

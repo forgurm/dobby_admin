@@ -32,6 +32,12 @@ function AppContent({ Component, pageProps }: { Component: ComponentType, pagePr
     }
   }, [status, isLoginPage, router]);
 
+  const handleContentClick = () => {
+    if (isSidebarOpen) {
+      setSidebarOpen(false);
+    }
+  };
+
   // 로딩 상태일 때 로딩 화면 표시
   if (status === 'loading') {
     return (
@@ -52,8 +58,11 @@ function AppContent({ Component, pageProps }: { Component: ComponentType, pagePr
       <div className="flex flex-col min-h-screen">
         <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
         <div className="flex flex-1">
-          <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
-          <main className="flex-1 p-4 overflow-auto">
+          <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
+          <main 
+            className="flex-1 p-4 overflow-auto"
+            onClick={handleContentClick}  // 메인 컨텐츠 영역 클릭 시 사이드바 닫기
+          >
             <Component {...pageProps} />
           </main>
         </div>
