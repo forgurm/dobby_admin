@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router';
 import { signOut } from 'next-auth/react';
 
 export default function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
