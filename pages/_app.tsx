@@ -4,11 +4,11 @@ import { useRouter } from 'next/router';
 import { SessionProvider, useSession } from 'next-auth/react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import React, { ComponentType, useState } from 'react';
+import React, { ComponentType, useState, useEffect } from 'react';
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <AppContent Component={Component} pageProps={pageProps} />
     </SessionProvider>
   );
@@ -17,36 +17,52 @@ function MyApp({ Component, pageProps }: AppProps) {
 function AppContent({ Component, pageProps }: { Component: ComponentType, pageProps: Record<string, unknown> }) {
   const router = useRouter();
   const { status } = useSession();
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const isLoginPage = router.pathname === '/login';
 
-  // 로그인 페이지가 아니고, 사용자가 로그인되어 있을 때만 헤더와 사이드바를 렌더링
-  const showLayout = !isLoginPage && status === 'authenticated';
+  // 인증 상태에 따른 리디렉션
+  useEffect(() => {
+    if (status === 'loading') return;
 
-  // toggleSidebar 함수 정의
-  const toggleSidebar = () => {
-    // 사이드바를 열고 닫는 로직을 여기에 추가하세요.
-    console.log('Sidebar toggled');
-  };
+    if (status === 'unauthenticated' && !isLoginPage) {
+      router.replace('/login');
+    }
+    if (status === 'authenticated' && isLoginPage) {
+      router.replace('/dashboard');
+    }
+  }, [status, isLoginPage, router]);
 
-  // 사이드바가 열려 있는지 여부를 관리하는 상태
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowX: 'hidden' }}>
-      {showLayout && <Header toggleSidebar={toggleSidebar} />}
-      <div style={{ display: 'flex', flex: 1, width: '100%' }}>
-        {showLayout && (
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
-          />
-        )}
-        <main style={{ flex: 1, overflowX: 'auto' }}>
-          <Component {...pageProps} />
-        </main>
+  // 로딩 상태일 때 로딩 화면 표시
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // 로그인 페이지일 때는 레이아웃 없이 표시
+  if (isLoginPage) {
+    return <Component {...pageProps} />;
+  }
+
+  // 인증된 상태일 때는 레이아웃과 함께 표시
+  if (status === 'authenticated') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
+        <div className="flex flex-1">
+          <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
+          <main className="flex-1 p-4 overflow-auto">
+            <Component {...pageProps} />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // 그 외의 경우 (인증되지 않은 상태)
+  return null;
 }
 
 export default MyApp; 
