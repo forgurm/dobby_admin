@@ -2,6 +2,7 @@ import React from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -57,7 +58,6 @@ export default function Dashboard() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard Page</h1>
-      
       {/* 회원수 섹션 */}
       <section className="mb-8">
         <div className="flex justify-between items-center">
