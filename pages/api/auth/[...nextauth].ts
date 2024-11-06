@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { verifyAdmin } from '../../../lib/db';
-import { User } from 'next-auth';
 
 // Session 타입 확장
 declare module "next-auth" {
@@ -10,51 +9,65 @@ declare module "next-auth" {
       id?: string;
       name?: string | null;
       email?: string | null;
-      image?: string | null;
     }
+  }
+  interface User {
+    id: string;
+    name?: string | null;
+    email?: string | null;
   }
 }
 
 export default NextAuth({
   providers: [
     CredentialsProvider({
+      name: 'Credentials',
       credentials: {
         id: { label: "ID", type: "text" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials) return null;
-        return authorize(credentials);
+        if (!credentials?.id || !credentials?.password) {
+          return null;
+        }
+
+        const user = await verifyAdmin(credentials.id, credentials.password);
+        
+        if (user) {
+          return {
+            id: user.no.toString(),
+            name: user.name,
+            email: user.emailid,
+          };
+        }
+        return null;
       }
     })
   ],
+  pages: {
+    signIn: '/login',
+  },
   callbacks: {
-    async session({ session, token }) {
-      if (session.user) {
-        console.log('Session user:', session.user);
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+      }
+      return session;
     }
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 24 hours
   }
 });
-
-async function authorize(credentials: Record<string, string>): Promise<User | null> {
-  console.log('Authorizing with credentials:', credentials);
-  const user = await verifyAdmin(credentials.id, credentials.password);
-
-  if (user) {
-    return {
-      id: user.id.toString(),
-      name: user.name,
-      email: user.email,
-    };
-  }
-  return null;
-}

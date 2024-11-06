@@ -12,6 +12,7 @@ export const db = mysql.createPool({
 export async function verifyAdmin(id: string, password: string) {
   console.log('Verifying admin with ID:', id);
   const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM users WHERE emailid = ? AND password = ?', [id, password]);
+  console.log('Query result:', rows);
   if (rows.length > 0) {
     return rows[0];
   }
