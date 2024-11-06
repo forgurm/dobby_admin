@@ -1,26 +1,27 @@
 import NextAuth from 'next-auth';
-import Providers from 'next-auth/providers';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { verifyAdmin } from '../../../lib/db';
 
 export default NextAuth({
   providers: [
-    Providers.Credentials({
-      name: 'Credentials',
-      credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
-      },
-      authorize: async (credentials) => {
-        // Use the verifyAdmin function to authenticate the user
-        const user = await verifyAdmin(credentials.username, credentials.password);
+    CredentialsProvider({
+      async authorize(credentials) {
+        console.log('Authorizing with credentials:', credentials);
+        const user = await verifyAdmin(credentials.id, credentials.password);
         if (user) {
-          return { id: user.id, name: user.name };
+          console.log('User verified:', user);
+          return user;
+        } else {
+          console.log('Invalid credentials');
+          throw new Error('Invalid credentials');
         }
-        return null;
       }
     })
   ],
-  pages: {
-    signIn: '/login',
+  callbacks: {
+    async session({ session, token }) {
+      session.user.id = token.id;
+      return session;
+    }
   }
 });

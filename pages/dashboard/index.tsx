@@ -2,12 +2,10 @@ import React from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Link from 'next/link';
-import { GetServerSideProps } from 'next';
-import prisma from '../../lib/prisma';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-export default function Dashboard({ userData }) {
+export default function Dashboard() {
   const barData = {
     labels: ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'],
     datasets: [
@@ -71,15 +69,15 @@ export default function Dashboard({ userData }) {
         <div className="grid grid-cols-3 gap-4">
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">레퍼럴 사용자</h3>
-            <p className="text-lg">{userData.referralCount}명</p>
+            <p className="text-lg">100명</p>
           </div>
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">미사용자</h3>
-            <p className="text-lg">{userData.nonReferralCount}명</p>
+            <p className="text-lg">50명</p>
           </div>
           <div className="p-4 bg-gray-200 rounded shadow">
             <h3 className="font-medium">거절</h3>
-            <p className="text-lg">{userData.rejectedCount}명</p>
+            <p className="text-lg">10명</p>
           </div>
         </div>
       </section>
@@ -141,21 +139,4 @@ export default function Dashboard({ userData }) {
       </section>
     </div>
   );
-}
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  // Example using Prisma
-  const referralCount = await prisma.user.count({ where: { referred: true } });
-  const nonReferralCount = await prisma.user.count({ where: { referred: false } });
-  const rejectedCount = await prisma.user.count({ where: { status: 'rejected' } });
-
-  return {
-    props: {
-      userData: {
-        referralCount,
-        nonReferralCount,
-        rejectedCount,
-      },
-    },
-  };
-}; 
+} 
