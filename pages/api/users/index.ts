@@ -13,7 +13,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const users = await getUsers();
       res.status(200).json(users);
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
       res.status(500).json({ error: 'Failed to fetch users' });
     }
   } else {

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GetServerSideProps } from 'next';
 import { getUserStats, getUsers } from '../../lib/users';
 import type { User } from '../../lib/db';
-import { format } from 'date-fns';
 
 interface MembersPageProps {
   users: User[];
@@ -13,14 +12,11 @@ interface MembersPageProps {
   };
 }
 
-export const getServerSideProps: GetServerSideProps<MembersPageProps> = async (context) => {
-  console.log("getServerSideProps - context.req:", context.req);
-  console.log("getServerSideProps - context.res:", context.res);
-
+export const getServerSideProps: GetServerSideProps<MembersPageProps> = async () => {
   try {
     const [users, userStats] = await Promise.all([
-      getUsers(context),
-      getUserStats(context)
+      getUsers(),
+      getUserStats()
     ]);
 
     return {
@@ -44,13 +40,6 @@ export const getServerSideProps: GetServerSideProps<MembersPageProps> = async (c
   }
 };
 
-// 필터 상태 인터페이스 추가
-interface FilterState {
-  level: string;
-  hasReferral: string;
-  searchTerm: string;
-}
-
 // 검색 조건 인터페이스 추가
 interface SearchFilters {
   status: string;
@@ -58,10 +47,16 @@ interface SearchFilters {
   searchTerm: string;
 }
 
-export default function Members({ users: initialUsers, userStats }: MembersPageProps) {
+// EditingUser 인터페이스 수정
+interface EditingUser extends Omit<User, 'creat_dt' | 'update_dt'> {
+  creat_dt: Date | string;
+  update_dt: Date | string;
+  [key: string]: string | number | boolean | null | Date | undefined;
+}
+
+export default function Members({ users: initialUsers }: MembersPageProps) {
   const [users, setUsers] = useState(initialUsers);
-  const [editingUser, setEditingUser] = useState<{ [key: number]: boolean }>({});
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<EditingUser | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [emailError, setEmailError] = useState<string>('');
   const [newUser, setNewUser] = useState({
@@ -101,13 +96,6 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
     );
   };
 
-  // 필터 상태 추가
-  const [filters, setFilters] = useState<FilterState>({
-    level: '',
-    hasReferral: '',
-    searchTerm: ''
-  });
-
   // 검색 필터 상태 추가
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     status: '',
@@ -115,8 +103,8 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
     searchTerm: ''
   });
 
-  // 검색 필터 적용 함수
-  const applyFilters = async () => {
+  // useCallback으로 applyFilters 감싸기
+  const applyFilters = useCallback(async () => {
     console.log('Client - Applying filters:', searchFilters);
     try {
       const response = await fetch('/api/users/search', {
@@ -127,22 +115,18 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
         body: JSON.stringify(searchFilters),
       });
 
-      console.log('Client - Response status:', response.status);
       if (!response.ok) throw new Error('Failed to fetch users');
-      
       const data = await response.json();
-      console.log('Client - Received data:', data);
       setUsers(data);
     } catch (error) {
       console.error('Client - Error fetching filtered users:', error);
     }
-  };
+  }, [searchFilters]);
 
   // 검색 조건 변경 시 자동 검색
   useEffect(() => {
-    console.log('Client - SearchFilters changed:', searchFilters);
     applyFilters();
-  }, [searchFilters]);
+  }, [applyFilters, searchFilters]);
 
   // 이메일 유효성 검사
   const validateEmail = (email: string) => {
@@ -161,38 +145,19 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
     return data.exists;
   };
 
-  // 필터링된 사용자 목록 가져오기
-  const fetchFilteredUsers = async () => {
-    try {
-      const response = await fetch('/api/users/filtered', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(filters)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch filtered users');
-      }
-      
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching filtered users:', error);
-    }
-  };
-
-  // 필터 변경 시 사용자 목록 업데이트
-  useEffect(() => {
-    fetchFilteredUsers();
-  }, [filters]);
-
   const handleEdit = (user: User) => {
-    setEditUser(user);
+    // User를 EditingUser로 변환
+    const editableUser: EditingUser = {
+      ...user,
+      creat_dt: user.creat_dt,
+      update_dt: user.update_dt
+    };
+    setEditingUser(editableUser);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editUser) return;
+    if (!editingUser) return;
 
     try {
       await fetch('/api/users/update', {
@@ -200,20 +165,30 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editUser),
+        body: JSON.stringify(editingUser),
       });
 
+      // EditingUser를 User 타입으로 변환
+      const updatedUser: User = {
+        ...editingUser,
+        creat_dt: new Date(editingUser.creat_dt),
+        update_dt: new Date(editingUser.update_dt)
+      };
+
       // 리스트 업데이트
-      const updatedUsers = users.map(u => u.no === editUser.no ? editUser : u);
+      const updatedUsers = users.map(u => 
+        u.no === editingUser.no ? updatedUser : u
+      );
+      
       setUsers(updatedUsers);
-      setEditUser(null);
+      setEditingUser(null);
     } catch (error) {
       console.error('Error updating user:', error);
     }
   };
 
   const handleCancel = () => {
-    setEditUser(null);
+    setEditingUser(null);
   };
 
   const refreshUsers = async () => {
@@ -275,7 +250,7 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
     }
   };
 
-  if (editUser) {
+  if (editingUser) {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-6">회원 수정</h1>
@@ -284,7 +259,7 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
             <label className="block text-sm font-medium text-gray-700">아이디</label>
             <input
               type="text"
-              value={editUser.emailid}
+              value={editingUser.emailid}
               disabled
               className="mt-1 block w-full border rounded-md shadow-sm p-2 bg-gray-100"
             />
@@ -293,8 +268,8 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
             <label className="block text-sm font-medium text-gray-700">이름</label>
             <input
               type="text"
-              value={editUser.name}
-              onChange={e => setEditUser({...editUser, name: e.target.value})}
+              value={editingUser.name}
+              onChange={e => setEditingUser({...editingUser, name: e.target.value})}
               className="mt-1 block w-full border rounded-md shadow-sm p-2"
             />
           </div>
@@ -302,8 +277,8 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
             <label className="block text-sm font-medium text-gray-700">거래소</label>
             <input
               type="text"
-              value={editUser.referral_exchange || ''}
-              onChange={e => setEditUser({...editUser, referral_exchange: e.target.value})}
+              value={editingUser.referral_exchange || ''}
+              onChange={e => setEditingUser({...editingUser, referral_exchange: e.target.value})}
               className="mt-1 block w-full border rounded-md shadow-sm p-2"
             />
           </div>
@@ -311,16 +286,16 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
             <label className="block text-sm font-medium text-gray-700">레퍼럴 코드</label>
             <input
               type="text"
-              value={editUser.referral_code || ''}
-              onChange={e => setEditUser({...editUser, referral_code: e.target.value})}
+              value={editingUser.referral_code || ''}
+              onChange={e => setEditingUser({...editingUser, referral_code: e.target.value})}
               className="mt-1 block w-full border rounded-md shadow-sm p-2"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">상태</label>
             <select
-              value={editUser.status}
-              onChange={e => setEditUser({...editUser, status: e.target.value})}
+              value={editingUser.status}
+              onChange={e => setEditingUser({...editingUser, status: e.target.value})}
               className="mt-1 block w-full border rounded-md shadow-sm p-2"
             >
               <option value="active">활성</option>
@@ -331,8 +306,8 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
           <div>
             <label className="block text-sm font-medium text-gray-700">레벨</label>
             <select
-              value={editUser.lv}
-              onChange={e => setEditUser({...editUser, lv: parseInt(e.target.value)})}
+              value={editingUser.lv}
+              onChange={e => setEditingUser({...editingUser, lv: parseInt(e.target.value)})}
               className="mt-1 block w-full border rounded-md shadow-sm p-2"
             >
               <option value="0">일반</option>
@@ -540,7 +515,7 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
         </button>
       </div>
       
-      {/* 검색 ��터 섹션 */}
+      {/* 검색 터 섹션 */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>

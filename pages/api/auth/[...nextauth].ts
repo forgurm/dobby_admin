@@ -1,6 +1,9 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { verifyAdmin } from '../../../lib/auth';
+import { JWT } from 'next-auth/jwt';
+import { Session } from 'next-auth';
+import type { User as NextAuthUser } from 'next-auth';
 
 // Session 타입 확장
 declare module "next-auth" {
@@ -18,7 +21,7 @@ declare module "next-auth" {
   }
 }
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -48,7 +51,7 @@ export default NextAuth({
     signIn: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user: NextAuthUser | undefined }) {
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -56,7 +59,7 @@ export default NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
@@ -67,7 +70,9 @@ export default NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
     maxAge: 24 * 60 * 60, // 24 hours
   }
-});
+};
+
+export default NextAuth(authOptions);

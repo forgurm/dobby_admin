@@ -14,7 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const filters = req.body;
       const users = await getFilteredUsers(filters);
       res.status(200).json(users);
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to fetch filtered users:', err);
       res.status(500).json({ error: 'Failed to fetch filtered users' });
     }
   } else {

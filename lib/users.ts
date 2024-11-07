@@ -76,7 +76,7 @@ export async function getFilteredUsers(filters: {
 }) {
   console.log('DB - Received filters:', filters);
   let query = 'SELECT * FROM users WHERE 1=1';
-  const params: any[] = [];
+  const params: (string | number)[] = [];
 
   if (filters.status) {
     query += ' AND status = ?';

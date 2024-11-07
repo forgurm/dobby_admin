@@ -1,11 +1,7 @@
-import { useRouter } from 'next/router';
 import { signOut } from 'next-auth/react';
 
 export default function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
-  const router = useRouter();
-
   const handleLogout = async () => {
-    // NextAuth의 signOut 함수 사용
     signOut({ callbackUrl: '/login' });
   };
 
