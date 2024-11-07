@@ -13,11 +13,14 @@ interface MembersPageProps {
   };
 }
 
-export const getServerSideProps: GetServerSideProps<MembersPageProps> = async () => {
+export const getServerSideProps: GetServerSideProps<MembersPageProps> = async (context) => {
+  console.log("getServerSideProps - context.req:", context.req);
+  console.log("getServerSideProps - context.res:", context.res);
+
   try {
     const [users, userStats] = await Promise.all([
-      getUsers(),
-      getUserStats()
+      getUsers(context),
+      getUserStats(context)
     ]);
 
     return {
@@ -114,6 +117,7 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
 
   // 검색 필터 적용 함수
   const applyFilters = async () => {
+    console.log('Client - Applying filters:', searchFilters);
     try {
       const response = await fetch('/api/users/search', {
         method: 'POST',
@@ -123,16 +127,20 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
         body: JSON.stringify(searchFilters),
       });
 
+      console.log('Client - Response status:', response.status);
       if (!response.ok) throw new Error('Failed to fetch users');
+      
       const data = await response.json();
+      console.log('Client - Received data:', data);
       setUsers(data);
     } catch (error) {
-      console.error('Error fetching filtered users:', error);
+      console.error('Client - Error fetching filtered users:', error);
     }
   };
 
   // 검색 조건 변경 시 자동 검색
   useEffect(() => {
+    console.log('Client - SearchFilters changed:', searchFilters);
     applyFilters();
   }, [searchFilters]);
 
@@ -532,7 +540,7 @@ export default function Members({ users: initialUsers, userStats }: MembersPageP
         </button>
       </div>
       
-      {/* 검색 필터 섹션 */}
+      {/* 검색 ��터 섹션 */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>

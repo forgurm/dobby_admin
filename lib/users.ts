@@ -37,7 +37,6 @@ export async function updateUser(user: Partial<User> & { no: number }) {
 }
 
 export async function updatePassword(userId: number, newPassword: string) {
-  // 이전 비밀번호와 동일한지 확인
   const [prevPassword] = await db.query<RowDataPacket[]>(
     'SELECT password FROM users WHERE no = ?',
     [userId]
@@ -71,24 +70,22 @@ export async function checkEmailExists(emailid: string) {
 }
 
 export async function getFilteredUsers(filters: {
-  level?: number;
-  hasReferral?: boolean;
+  status?: string;
+  level?: string;
   searchTerm?: string;
 }) {
+  console.log('DB - Received filters:', filters);
   let query = 'SELECT * FROM users WHERE 1=1';
   const params: any[] = [];
 
-  if (filters.level !== undefined) {
-    query += ' AND lv = ?';
-    params.push(filters.level);
+  if (filters.status) {
+    query += ' AND status = ?';
+    params.push(filters.status);
   }
 
-  if (filters.hasReferral !== undefined) {
-    if (filters.hasReferral) {
-      query += ' AND referral_code IS NOT NULL';
-    } else {
-      query += ' AND referral_code IS NULL';
-    }
+  if (filters.level) {
+    query += ' AND lv = ?';
+    params.push(filters.level);
   }
 
   if (filters.searchTerm) {
@@ -98,8 +95,12 @@ export async function getFilteredUsers(filters: {
   }
 
   query += ' ORDER BY creat_dt DESC';
+  
+  console.log('DB - Generated query:', query);
+  console.log('DB - Query parameters:', params);
 
   const [rows] = await db.query<RowDataPacket[]>(query, params);
+  console.log('DB - Query results:', rows);
   return rows as User[];
 }
 
