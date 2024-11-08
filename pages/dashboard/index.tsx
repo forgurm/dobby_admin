@@ -123,31 +123,55 @@ export default function Dashboard({ userStats }: DashboardProps) {
     },
   };
 
-  const doughnutData = {
-    labels: ['동작', '멈춤'],
+  const botBarData = {
+    labels: ['봇 상태'],
     datasets: [
       {
-        label: '봇 상태',
-        data: [60, 40], // 예시 데이터, 실제 데이터로 필요
-        backgroundColor: ['rgba(54, 162, 235, 0.5)', 'rgba(255, 99, 132, 0.5)'],
+        label: '전체',
+        data: [100],
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        barThickness: 50,
       },
+      {
+        label: '동작중',
+        data: [60],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        barThickness: 50,
+      }
     ],
   };
 
-  const doughnutOptions = {
+  const botBarOptions = {
     responsive: true,
+    indexAxis: 'y' as const,
     plugins: {
-      datalabels: {
-        display: false,
-      },
       legend: {
         position: 'top' as const,
       },
       title: {
         display: true,
-        text: '봇 목록 원형 차트',
+        text: '봇 상태 현황',
       },
     },
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: '봇 수',
+        },
+        stacked: false,
+      },
+      y: {
+        stacked: false,
+        offset: true,
+      },
+    },
+    maintainAspectRatio: false,
   };
 
   return (
@@ -185,21 +209,21 @@ export default function Dashboard({ userStats }: DashboardProps) {
             <a className="text-blue-500">More</a>
           </Link>
         </div>
-        <div className="p-4 bg-gray-200 rounded shadow w-full">
-          <Bar data={barData} options={barOptions} />
+        <div className="p-4 bg-gray-200 rounded shadow w-full" style={{ height: '200px' }}>
+          <Bar data={barData} options={{ ...barOptions, maintainAspectRatio: false }} />
         </div>
       </section>
 
-      {/* 봇목록 원형차트 섹션 */}
+      {/* 봇목록 차트 섹션 */}
       <section className="mb-8">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold mb-2">봇목록 원형차트</h2>
+          <h2 className="text-xl font-semibold mb-2">봇 상태</h2>
           <Link href="/bots" legacyBehavior>
             <a className="text-blue-500">More</a>
           </Link>
         </div>
-        <div className="p-4 bg-gray-200 rounded shadow w-full">
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+        <div className="p-4 bg-gray-200 rounded shadow w-full" style={{ height: '200px' }}>
+          <Bar data={botBarData} options={botBarOptions} />
         </div>
       </section>
 
@@ -259,7 +283,7 @@ export default function Dashboard({ userStats }: DashboardProps) {
         <div className="p-4 bg-gray-200 rounded shadow">
           <ul>
             <li>회원 문의 1</li>
-            <li>회원 문의 2</li>
+            <li>회원 문��� 2</li>
             <li>회원 문의 3</li>
           </ul>
         </div>
