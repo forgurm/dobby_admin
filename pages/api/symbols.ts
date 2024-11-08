@@ -1,36 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { db } from '../../lib/db'; // 데이터베이스 연결 설정
-
-type SymbolInfo = {
-  // 여기에 실제 필드와 타입을 정의하세요.
-  id: number;
-  symbol: string;
-  // 다른 필드들...
-};
+import { db } from '../../lib/db';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   try {
-    if (req.method === 'PUT') {
-      const symbolInfos: SymbolInfo[] = req.body;
+    if (req.method === 'GET') {
+      const { exchange } = req.query;
 
-      const updatePromises = symbolInfos.map((info: SymbolInfo) =>
-        db.query(
-          'UPDATE symbol_info SET symbol = ? WHERE id = ?',
-          [info.symbol, info.id]
-        )
-      );
+      const [rows] = await db.query(`
+        SELECT symbol_name, symbol_code
+        FROM exchange_info
+        WHERE exchange_code = ?
+        ORDER BY symbol_name ASC
+      `, [exchange]);
 
-      await Promise.all(updatePromises);
-
-      return res.status(200).json({ message: 'Symbol infos updated successfully' });
+      return res.status(200).json(rows);
     }
 
     return res.status(405).json({ message: 'Method not allowed' });
   } catch (error) {
-    console.error('Error updating symbols:', error);
-    return res.status(500).json({ message: 'Error updating symbols' });
+    console.error('Error fetching symbols:', error);
+    return res.status(500).json({ message: 'Error fetching symbols' });
   }
 } 

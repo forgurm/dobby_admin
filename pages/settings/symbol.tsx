@@ -42,7 +42,7 @@ export default function SymbolSettings() {
     if (selectedExchange) {
       const fetchSymbols = async () => {
         try {
-          const response = await fetch(`/api/symbols/codes?exchange_code=${selectedExchange}`);
+          const response = await fetch(`/api/symbols?exchange=${selectedExchange}`);
           if (!response.ok) throw new Error('Failed to fetch symbols');
           const data = await response.json();
           setSymbols(data);
