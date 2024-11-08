@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 import { getUserStats } from '../../lib/users';
+import axios from 'axios';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, ChartDataLabels);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 interface DashboardProps {
   userStats: {
@@ -44,8 +44,14 @@ interface ExchangeInfo {
   empty_symbol_names: number;
 }
 
+interface Deposit {
+  date: string;
+  amount: number;
+}
+
 export default function Dashboard({ userStats }: DashboardProps) {
   const [exchangeData, setExchangeData] = useState<ExchangeInfo[]>([]);
+  const [dailyDeposits, setDailyDeposits] = useState<Deposit[]>([]);
 
   useEffect(() => {
     const fetchExchangeData = async () => {
@@ -62,12 +68,25 @@ export default function Dashboard({ userStats }: DashboardProps) {
     fetchExchangeData();
   }, []);
 
+    useEffect(() => {
+      const fetchDeposits = async () => {
+        try {
+          const response = await axios.get<Deposit[]>('/api/bybit/deposits');
+          setDailyDeposits(response.data);
+        } catch (error) {
+          console.error('Error fetching deposit data:', error);
+        }
+      };
+
+      fetchDeposits();
+    }, []);
+
   const barData = {
-    labels: ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'],
+    labels: dailyDeposits.map(deposit => deposit.date),
     datasets: [
       {
-        label: '일별 수익률 ($)',
-        data: [100, 150, 200, 250, 300],
+        label: '일별 수익률 (USDT)',
+        data: dailyDeposits.map(deposit => deposit.amount),
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
       },
     ],
@@ -76,12 +95,30 @@ export default function Dashboard({ userStats }: DashboardProps) {
   const barOptions = {
     responsive: true,
     plugins: {
+      datalabels: {
+        display: false,
+      },
       legend: {
         position: 'top' as const,
       },
       title: {
-        display: true,
+        display: false,
         text: '레퍼럴 일자별 수익 차트',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'USDT',
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: '날짜',
+        },
       },
     },
   };
@@ -100,6 +137,9 @@ export default function Dashboard({ userStats }: DashboardProps) {
   const doughnutOptions = {
     responsive: true,
     plugins: {
+      datalabels: {
+        display: false,
+      },
       legend: {
         position: 'top' as const,
       },
@@ -194,10 +234,6 @@ export default function Dashboard({ userStats }: DashboardProps) {
                   title: {
                     display: true,
                     text: `${exchange.exchange_name}`,
-                  },
-                  datalabels: {
-                    color: '#000',
-                    formatter: (value: number) => `${value}`,
                   },
                 },
               };
