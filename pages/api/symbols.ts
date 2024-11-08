@@ -1,25 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../lib/db'; // 데이터베이스 연결 설정
 
+type SymbolInfo = {
+  // 여기에 실제 필드와 타입을 정의하세요.
+  id: number;
+  symbol: string;
+  // 다른 필드들...
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   try {
     if (req.method === 'PUT') {
-      const { symbols, exchange_code } = req.body;
+      const symbolInfos: SymbolInfo[] = req.body;
 
-      // 각 심볼에 대해 업데이트 쿼리 실행
-      const updatePromises = symbols.map((symbol: any) =>
+      const updatePromises = symbolInfos.map((info: SymbolInfo) =>
         db.query(
-          'UPDATE exchange_info SET symbol_name = ? WHERE symbol_code = ? AND exchange_code = ?',
-          [symbol.symbol_name, symbol.symbol_code, exchange_code]
+          'UPDATE symbol_info SET symbol = ? WHERE id = ?',
+          [info.symbol, info.id]
         )
       );
 
       await Promise.all(updatePromises);
 
-      return res.status(200).json({ message: 'Symbols updated successfully' });
+      return res.status(200).json({ message: 'Symbol infos updated successfully' });
     }
 
     return res.status(405).json({ message: 'Method not allowed' });

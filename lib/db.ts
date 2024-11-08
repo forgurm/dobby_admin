@@ -1,10 +1,12 @@
 import mysql from 'mysql2/promise';
 
 declare global {
-  var dbPool: mysql.Pool | undefined;
+  let dbPool: mysql.Pool | undefined;
 }
 
-export const db = global.dbPool || mysql.createPool({
+const globalWithDbPool = global as typeof globalThis & { dbPool?: mysql.Pool };
+
+export const db = globalWithDbPool.dbPool || mysql.createPool({
   host: 'forgurm.iptime.org',
   user: 'forgurm',
   password: 'asdfqwer1!',
@@ -15,9 +17,11 @@ export const db = global.dbPool || mysql.createPool({
   queueLimit: 0
 });
 
-if (process.env.NODE_ENV !== 'production') global.dbPool = db;
+if (!globalWithDbPool.dbPool) {
+  globalWithDbPool.dbPool = db;
+}
 
-export async function queryDatabase(query: string, params: any[]) {
+export async function queryDatabase(query: string, params: Array<string | number>) {
   const connection = await db.getConnection();
   try {
     const [results] = await connection.execute(query, params);

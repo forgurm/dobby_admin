@@ -1,6 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { db } from '../../lib/db'; // 데이터베이스 연결 설정
 
+type AlertInfo = {
+  id: number;
+  name: string;
+  lv: number;
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -12,9 +18,9 @@ export default async function handler(
     }
 
     if (req.method === 'PUT') {
-      const alertInfos = req.body;
+      const alertInfos: AlertInfo[] = req.body;
 
-      const updatePromises = alertInfos.map((info: any) =>
+      const updatePromises = alertInfos.map((info: AlertInfo) =>
         db.query(
           'UPDATE alert_info SET name = ?, lv = ? WHERE id = ?',
           [info.name, info.lv, info.id]
