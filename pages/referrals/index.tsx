@@ -6,18 +6,23 @@ import { Bar } from 'react-chartjs-2';
 // Chart.js에 필요한 요소 등록
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+interface Deposit {
+  date: string;
+  amount: number;
+}
+
 const ReferralsPage = () => {
   const [totalBalance, setTotalBalance] = useState(0);
-  const [dailyDeposits, setDailyDeposits] = useState([]);
+  const [dailyDeposits, setDailyDeposits] = useState<Deposit[]>([]);
 
   useEffect(() => {
     const fetchDeposits = async () => {
       try {
-        const response = await axios.get('/api/bybit/deposits');
+        const response = await axios.get<Deposit[]>('/api/bybit/deposits');
         const data = response.data;
 
         // 총 잔액 계산
-        const total = data.reduce((acc, deposit) => acc + deposit.amount, 0);
+        const total = data.reduce((acc: number, deposit: Deposit) => acc + deposit.amount, 0);
         setTotalBalance(total);
 
         // 일별 디파짓 데이터 설정
