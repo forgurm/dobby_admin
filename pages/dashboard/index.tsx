@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Link from 'next/link';
@@ -52,6 +52,8 @@ interface Deposit {
 export default function Dashboard({ userStats }: DashboardProps) {
   const [exchangeData, setExchangeData] = useState<ExchangeInfo[]>([]);
   const [dailyDeposits, setDailyDeposits] = useState<Deposit[]>([]);
+  const [threadsConnected, setThreadsConnected] = useState<number>(0);
+  const totalThreads = 151;
 
   useEffect(() => {
     const fetchExchangeData = async () => {
@@ -79,6 +81,21 @@ export default function Dashboard({ userStats }: DashboardProps) {
       };
 
       fetchDeposits();
+    }, []);
+
+    useEffect(() => {
+      const fetchThreadsConnected = async () => {
+        try {
+          const response = await fetch('/api/status');
+          if (!response.ok) throw new Error('Failed to fetch threads connected');
+          const data = await response.json();
+          setThreadsConnected(data.threadsConnected);
+        } catch (error) {
+          console.error('Error fetching threads connected:', error);
+        }
+      };
+
+      fetchThreadsConnected();
     }, []);
 
   const barData = {
@@ -174,8 +191,25 @@ export default function Dashboard({ userStats }: DashboardProps) {
     maintainAspectRatio: false,
   };
 
+  const getProgressBarColor = () => {
+    if (threadsConnected <= 30) return 'bg-green-500';
+    if (threadsConnected <= 100) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className="p-4">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold mb-2">Threads Connected</h2>
+        <div className="w-full bg-gray-200 rounded-full h-6">
+          <div
+            className={`${getProgressBarColor()} h-6 rounded-full`}
+            style={{ width: `${(threadsConnected / totalThreads) * 100}%` }}
+          ></div>
+        </div>
+        <p className="mt-2">{threadsConnected} / {totalThreads}</p>
+      </div>
       <h1 className="text-2xl font-bold mb-4">Dashboard Page</h1>
       {/* 회원수 섹션 */}
       <section className="mb-8">
