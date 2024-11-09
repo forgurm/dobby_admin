@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 import { getUserStats } from '../../lib/users';
 import axios from 'axios';
+import { ProgressBar } from 'react-bootstrap';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -127,18 +128,18 @@ export default function Dashboard({ userStats }: DashboardProps) {
     labels: ['봇 상태'],
     datasets: [
       {
-        label: '전체',
-        data: [100],
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        label: '동작중',
+        data: [60],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,
         barThickness: 50,
       },
       {
-        label: '동작중',
-        data: [60],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        label: '전체',
+        data: [40],
+        backgroundColor: 'rgba(192, 192, 192, 0.5)',
+        borderColor: 'rgba(192, 192, 192, 1)',
         borderWidth: 1,
         barThickness: 50,
       }
@@ -164,10 +165,10 @@ export default function Dashboard({ userStats }: DashboardProps) {
           display: true,
           text: '봇 수',
         },
-        stacked: false,
+        stacked: true,
       },
       y: {
-        stacked: false,
+        stacked: true,
         offset: true,
       },
     },
@@ -283,7 +284,7 @@ export default function Dashboard({ userStats }: DashboardProps) {
         <div className="p-4 bg-gray-200 rounded shadow">
           <ul>
             <li>회원 문의 1</li>
-            <li>회원 문��� 2</li>
+            <li>회원 문의 2</li>
             <li>회원 문의 3</li>
           </ul>
         </div>

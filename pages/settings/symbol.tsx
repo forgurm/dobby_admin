@@ -133,35 +133,37 @@ export default function SymbolSettings() {
 
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">심볼 목록</h2>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">심볼 코드</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">심볼 이름</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {symbols.map((symbol, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="block overflow-hidden overflow-ellipsis" style={{ maxWidth: '150px' }}>
-                    {symbol.symbol_code.length > 15 ? `${symbol.symbol_code.slice(0, 15)}...` : symbol.symbol_code}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="text"
-                    value={symbol.symbol_name || ''}
-                    onChange={(e) => handleSymbolNameChange(index, e.target.value)}
-                    className="mt-1 block w-full border rounded-md shadow-sm p-2"
-                  />
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-100">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="w-1/6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
+                <th className="w-1/6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ">심볼 코드</th>
+                <th className="w-4/6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">심볼 이름</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {symbols.map((symbol, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs font-medium">{index + 1}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs font-medium bg-gray-100">
+                    <span className="block overflow-hidden overflow-ellipsis" style={{ maxWidth: '100px' }}>
+                        {symbol.symbol_code.replace('USDT', '')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs font-medium">
+                    <input
+                      type="text"
+                      value={symbol.symbol_name || ''}
+                      onChange={(e) => handleSymbolNameChange(index, e.target.value)}
+                      className="mt-1 block w-full border rounded-md shadow-sm p-2"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
