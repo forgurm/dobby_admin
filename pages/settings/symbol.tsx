@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Symbol {
   symbol_name: string | null;
@@ -20,40 +20,41 @@ export default function SymbolSettings() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const fetchExchanges = async () => {
-      try {
-        const response = await fetch('/api/exchanges');
-        if (!response.ok) throw new Error('Failed to fetch exchanges');
-        const data = await response.json();
-        setExchanges(data);
-        if (data.length > 0) {
-          setSelectedExchange(data[0].exchange_code);
-        }
-      } catch (error) {
-        console.error('Error fetching exchanges:', error);
+  // 거래소 정보를 가져오는 함수
+  const fetchExchanges = async () => {
+    try {
+      const response = await fetch('/api/exchanges');
+      if (!response.ok) throw new Error('Failed to fetch exchanges');
+      const data = await response.json();
+      setExchanges(data);
+      if (data.length > 0) {
+        setSelectedExchange(data[0].exchange_code);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching exchanges:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchExchanges();
   }, []);
 
-  useEffect(() => {
-    if (selectedExchange) {
-      const fetchSymbols = async () => {
-        try {
-          const response = await fetch(`/api/symbols?exchange=${selectedExchange}`);
-          if (!response.ok) throw new Error('Failed to fetch symbols');
-          const data = await response.json();
-          setSymbols(data);
-        } catch (error) {
-          console.error('Error fetching symbols:', error);
-        }
-      };
-
-      fetchSymbols();
+  const fetchSymbols = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/symbols?exchange=${selectedExchange}`);
+      if (!response.ok) throw new Error('Failed to fetch symbols');
+      const data = await response.json();
+      setSymbols(data);
+    } catch (error) {
+      console.error('Error fetching symbols:', error);
     }
   }, [selectedExchange]);
+
+  useEffect(() => {
+    if (selectedExchange) {
+      fetchSymbols();
+    }
+  }, [selectedExchange, fetchSymbols]);
 
   const handleSymbolNameChange = (index: number, newName: string) => {
     const updatedSymbols = [...symbols];
@@ -61,24 +62,38 @@ export default function SymbolSettings() {
     setSymbols(updatedSymbols);
   };
 
-  const handleSaveSymbols = async () => {
+  async function handleSaveSymbols() {
     try {
       const response = await fetch('/api/symbols', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ symbols, exchange_code: selectedExchange }),
+        body: JSON.stringify({
+          symbols: symbols.map(symbol => ({
+            symbolName: symbol.symbol_name,
+            symbolCode: symbol.symbol_code,
+            exchangeCode: selectedExchange,
+          })),
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to save symbols');
+      if (!response.ok) {
+        throw new Error('Failed to save symbols');
+      }
 
-      // 저장 후 화면 새로고침
-      window.location.reload();
+      const data = await response.json();
+      console.log('Success:', data);
+
+      // 심볼 목록을 다시 가져와 갱신
+      await fetchSymbols();
+
+      // 거래소 정보를 다시 가져와 갱신
+      await fetchExchanges();
     } catch (error) {
       console.error('Error saving symbols:', error);
     }
-  };
+  }
 
   const scrollLeft = () => {
     if (scrollRef.current && buttonRef.current) {
