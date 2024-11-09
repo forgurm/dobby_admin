@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 import { getUserStats } from '../../lib/users';
 import axios from 'axios';
-import { ProgressBar } from 'react-bootstrap';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
