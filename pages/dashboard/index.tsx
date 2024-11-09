@@ -199,9 +199,11 @@ export default function Dashboard({ userStats }: DashboardProps) {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      
+      
+      <h1 className="text-2xl font-bold mb-4">대시보드</h1>
       <div className="mb-4">
-        <h2 className="text-xl font-bold mb-2">Threads Connected</h2>
+        <h2 className="text-xl font-bold mb-2">활성화된 클라이언트 수</h2>
         <div className="w-full bg-gray-200 rounded-full h-6">
           <div
             className={`${getProgressBarColor()} h-6 rounded-full`}
@@ -210,7 +212,6 @@ export default function Dashboard({ userStats }: DashboardProps) {
         </div>
         <p className="mt-2">{threadsConnected} / {totalThreads}</p>
       </div>
-      <h1 className="text-2xl font-bold mb-4">Dashboard Page</h1>
       {/* 회원수 섹션 */}
       <section className="mb-8">
         <div className="flex justify-between items-center">

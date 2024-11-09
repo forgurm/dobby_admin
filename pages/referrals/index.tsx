@@ -48,10 +48,10 @@ const ReferralsPage = () => {
   };
 
   return (
-    <div>
-      <h1>Referrals</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">레퍼럴 관리</h1>
       <div className="card">
-        <h2>Total Balance: {totalBalance} USDT</h2>
+        <h2>총 잔액: {totalBalance} USDT</h2>
       </div>
       <div className="chart">
         <Bar data={chartData} />
