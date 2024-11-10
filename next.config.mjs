@@ -8,12 +8,16 @@ const nextConfig = {
       topLevelAwait: true,
     };
 
-    // 기존 설정 유지
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: 'crypto-browserify',
+        stream: 'stream-browserify',
+        buffer: 'buffer',
+      };
+    }
+
     return config;
-  },
-  // API 라우트에서 formidable 사용을 위한 설정
-  api: {
-    bodyParser: false,
   },
 };
 
