@@ -28,11 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'UPDATE boards SET is_deleted = TRUE, updated_at = NOW() WHERE id = ? AND is_deleted = FALSE',
           [boardId]
         );
-
-        if (!deleteResult || !deleteResult[0]?.affectedRows) {
-          return res.status(404).json({ message: 'Board not found or already deleted' });
-        }
-
         return res.status(200).json({ message: 'Board deleted successfully' });
 
       default:

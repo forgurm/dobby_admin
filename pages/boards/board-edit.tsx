@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import axiosInstance from '../../lib/axios';
+import axiosInstance from '@/lib/axios';
 
 interface CommonCode {
   id: number;
@@ -23,7 +23,9 @@ export default function BoardEdit() {
   useEffect(() => {
     const fetchBoard = async () => {
       try {
-        const response = await axiosInstance.get(`/api/boards/board-detail-controller?id=${id}`);
+        const response = await axiosInstance.get(`/api/boards/board-detail-controller`, {
+          params: { id }
+        });
         setFormData(response.data);
       } catch (error) {
         console.error('Error fetching board:', error);
@@ -51,7 +53,7 @@ export default function BoardEdit() {
     e.preventDefault();
     try {
       await axiosInstance.put(`/api/boards/board-detail-controller?id=${id}`, formData);
-      router.push('/boards/board-list');
+      router.push('/boards');
     } catch (error) {
       console.error('Error updating board:', error);
     }

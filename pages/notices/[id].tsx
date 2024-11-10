@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import axiosInstance from '@/lib/axios';
 import { EditorInstance } from '@/types/editor';
+import Popup from '@/components/Popup';
 
 const NoticeEditor = dynamic(() => import('@/components/notices/NoticeEditor'), {
   ssr: false,
@@ -38,6 +39,9 @@ export default function NoticeEdit() {
   const [files, setFiles] = useState<File[]>([]);
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const [isErrorPopupOpen, setErrorPopupOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleEditorMount = useCallback((editorInstance: EditorInstance) => {
     setEditor(editorInstance);
@@ -88,6 +92,17 @@ export default function NoticeEdit() {
         ? prev.filter(id => id !== boardId)
         : [...prev, boardId]
     );
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axiosInstance.delete(`/api/notices/${id}`);
+      router.push('/notices');
+    } catch (error) {
+      console.error('Error deleting notice:', error);
+      setErrorMessage('삭제에 실패했습니다.');
+      setErrorPopupOpen(true);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,167 +191,192 @@ export default function NoticeEdit() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">공지사항 수정</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            제목
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
+    <div className="p-4">
+      <Popup
+        title="삭제 확인"
+        message="정말 삭제하시겠습니까?"
+        onConfirm={handleDelete}
+        onCancel={() => setPopupOpen(false)}
+        isOpen={isPopupOpen}
+      />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            노출 게시판
-          </label>
-          <div className="space-y-2">
-            <div className="mb-4">
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="radio"
-                  value="ALL"
-                  checked={exposureType === 'ALL'}
-                  onChange={(e) => setExposureType(e.target.value as 'ALL')}
-                  className="form-radio"
-                />
-                <span className="ml-2">전체</span>
-              </label>
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="radio"
-                  value="SELECTED"
-                  checked={exposureType === 'SELECTED'}
-                  onChange={(e) => setExposureType(e.target.value as 'SELECTED')}
-                  className="form-radio"
-                />
-                <span className="ml-2">게시판 선택</span>
-              </label>
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="radio"
-                  value="NONE"
-                  checked={exposureType === 'NONE'}
-                  onChange={(e) => setExposureType(e.target.value as 'NONE')}
-                  className="form-radio"
-                />
-                <span className="ml-2">비노출</span>
-              </label>
-            </div>
-            {exposureType === 'SELECTED' && (
-              <div className="mt-4 space-y-2">
-                {boards.map(board => (
-                  <label key={board.id} className="inline-flex items-center mr-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedBoards.includes(board.id)}
-                      onChange={() => handleBoardChange(board.id)}
-                      className="form-checkbox h-4 w-4 text-blue-600"
-                    />
-                    <span className="ml-2">{board.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+      <Popup
+        title="오류"
+        message={errorMessage}
+        onConfirm={() => setErrorPopupOpen(false)}
+        onCancel={() => setErrorPopupOpen(false)}
+        isOpen={isErrorPopupOpen}
+      />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            만료일
-          </label>
-          <input
-            type="date"
-            value={expireDate}
-            onChange={(e) => setExpireDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            내용
-          </label>
-          <NoticeEditor
-            height="500px"
-            onMount={handleEditorMount}
-          />
-        </div>
-
-        {attachedFiles.length > 0 && (
-          <div className="mb-4">
+      <div className="max-w-4xl mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-6">공지사항 수정</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              첨부 파일
+              제목
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              노출 게시판
             </label>
             <div className="space-y-2">
-              {attachedFiles
-                .filter(fileUrl => {
-                  const fileName = fileUrl.split('/').pop() || '';
-                  const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
-                  return !(isImage && content?.includes(fileUrl));
-                })
-                .map((fileUrl, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <button
-                      type="button"
-                      onClick={() => handleFileDownload(fileUrl)}
-                      className="flex items-center text-blue-500 hover:text-blue-700"
-                    >
-                      <span className="mr-2">📎</span>
-                      <span className="underline">{fileUrl.split('/').pop()}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleFileDelete(fileUrl)}
-                      className="text-red-500 hover:text-red-700 px-2"
-                      title="파일 삭제"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+              <div className="mb-4">
+                <label className="inline-flex items-center mr-4">
+                  <input
+                    type="radio"
+                    value="ALL"
+                    checked={exposureType === 'ALL'}
+                    onChange={(e) => setExposureType(e.target.value as 'ALL')}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">전체</span>
+                </label>
+                <label className="inline-flex items-center mr-4">
+                  <input
+                    type="radio"
+                    value="SELECTED"
+                    checked={exposureType === 'SELECTED'}
+                    onChange={(e) => setExposureType(e.target.value as 'SELECTED')}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">게시판 선택</span>
+                </label>
+                <label className="inline-flex items-center mr-4">
+                  <input
+                    type="radio"
+                    value="NONE"
+                    checked={exposureType === 'NONE'}
+                    onChange={(e) => setExposureType(e.target.value as 'NONE')}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">비노출</span>
+                </label>
+              </div>
+              {exposureType === 'SELECTED' && (
+                <div className="mt-4 space-y-2">
+                  {boards.map(board => (
+                    <label key={board.id} className="inline-flex items-center mr-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedBoards.includes(board.id)}
+                        onChange={() => handleBoardChange(board.id)}
+                        className="form-checkbox h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">{board.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            새 첨부 파일
-          </label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            허용된 파일 형식: 이미지(jpg, png, gif), 문서(pdf, doc, docx, xls, xlsx, ppt, pptx), 압축파일(zip, rar, 7z)
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              만료일
+            </label>
+            <input
+              type="date"
+              value={expireDate}
+              onChange={(e) => setExpireDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              내용
+            </label>
+            <NoticeEditor
+              height="500px"
+              onMount={handleEditorMount}
+            />
+          </div>
 
-        <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            onClick={() => router.push('/notices')}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md"
-          >
-            취소
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 text-white bg-blue-500 rounded-md"
-          >
-            수정
-          </button>
-        </div>
-      </form>
+          {attachedFiles.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                첨부 파일
+              </label>
+              <div className="space-y-2">
+                {attachedFiles
+                  .filter(fileUrl => {
+                    const fileName = fileUrl.split('/').pop() || '';
+                    const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+                    return !(isImage && content?.includes(fileUrl));
+                  })
+                  .map((fileUrl, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                      <button
+                        type="button"
+                        onClick={() => handleFileDownload(fileUrl)}
+                        className="flex items-center text-blue-500 hover:text-blue-700"
+                      >
+                        <span className="mr-2">📎</span>
+                        <span className="underline">{fileUrl.split('/').pop()}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleFileDelete(fileUrl)}
+                        className="text-red-500 hover:text-red-700 px-2"
+                        title="파일 삭제"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              새 첨부 파일
+            </label>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              허용된 파일 형식: 이미지(jpg, png, gif), 문서(pdf, doc, docx, xls, xlsx, ppt, pptx), 압축파일(zip, rar, 7z)
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={() => router.push('/notices')}
+              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-white bg-blue-500 rounded-md"
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => setPopupOpen(true)}
+              className="px-4 py-2 text-white bg-red-500 rounded-md"
+            >
+              삭제
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 } 

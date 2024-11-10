@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axios';
+import Popup from '@/components/Popup';
 
 interface Board {
   id: number;
@@ -36,22 +37,12 @@ export default function NoticeList() {
     boardId: undefined,
     excludeExpired: true
   });
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const [isErrorPopupOpen, setErrorPopupOpen] = useState(false);
+  const [selectedNoticeId, setSelectedNoticeId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    fetchBoards();
-    fetchNotices();
-  }, [searchParams]);
-
-  const fetchBoards = async () => {
-    try {
-      const response = await axiosInstance.get('/api/boards');
-      setBoards(response.data);
-    } catch (error) {
-      console.error('Error fetching boards:', error);
-    }
-  };
-
-  const fetchNotices = async () => {
+  const fetchNotices = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams();
       if (searchParams.title) queryParams.append('title', searchParams.title);
@@ -65,6 +56,20 @@ export default function NoticeList() {
       setNotices(response.data);
     } catch (error) {
       console.error('Error fetching notices:', error);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchBoards();
+    fetchNotices();
+  }, [searchParams, fetchNotices]);
+
+  const fetchBoards = async () => {
+    try {
+      const response = await axiosInstance.get('/api/boards');
+      setBoards(response.data);
+    } catch (error) {
+      console.error('Error fetching boards:', error);
     }
   };
 
@@ -84,21 +89,44 @@ export default function NoticeList() {
     });
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await axiosInstance.delete(`/api/notices/${id}`);
-        // 목록 새로고침
-        fetchNotices();
-      } catch (error) {
-        console.error('공지사항 삭제 실패:', error);
-        alert('공지사항 삭제에 실패했습니다.');
-      }
+  const handleDelete = async () => {
+    if (selectedNoticeId === null) return;
+
+    try {
+      await axiosInstance.delete(`/api/notices/${selectedNoticeId}`);
+      setPopupOpen(false);
+      fetchNotices(); // 목록 새로고침
+    } catch (error) {
+      console.error('공지사항 삭제 실패:', error);
+      setErrorMessage('공지사항 삭제에 실패했습니다.');
+      setPopupOpen(false); // 실패 시에도 팝업 닫기
+      setErrorPopupOpen(true);
     }
+  };
+
+  const openPopup = (noticeId: number) => {
+    setSelectedNoticeId(noticeId);
+    setPopupOpen(true);
   };
 
   return (
     <div className="p-4">
+      <Popup
+        title="삭제 확인"
+        message="정말 삭제하시겠습니까?"
+        onConfirm={handleDelete}
+        onCancel={() => setPopupOpen(false)}
+        isOpen={isPopupOpen}
+      />
+
+      <Popup
+        title="오류"
+        message={errorMessage}
+        onConfirm={() => setErrorPopupOpen(false)}
+        onCancel={() => setErrorPopupOpen(false)}
+        isOpen={isErrorPopupOpen}
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">공지사항 관리</h1>
         <Link href="/notices/notice-create" legacyBehavior>
@@ -252,7 +280,7 @@ export default function NoticeList() {
                       </a>
                     </Link>
                     <button
-                      onClick={() => handleDelete(notice.id)}
+                      onClick={() => openPopup(notice.id)}
                       className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
                     >
                       삭제

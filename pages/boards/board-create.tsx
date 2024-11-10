@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import axiosInstance from '../../lib/axios';
+import axiosInstance from '@/lib/axios';
 
 interface CommonCode {
   id: number;
@@ -42,7 +42,7 @@ export default function BoardCreate() {
     e.preventDefault();
     try {
       await axiosInstance.post('/api/boards/board-controller', formData);
-      router.push('/boards/board-list');
+      router.push('/boards');
     } catch (error) {
       console.error('Error creating board:', error);
     }

@@ -34,7 +34,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, to
             </Link>
           </li>
           <li className="mb-2">
-            <Link href="/boards/board-list" legacyBehavior>
+            <Link href="/boards" legacyBehavior>
               <a className="block p-2 bg-gray-700 rounded hover:bg-gray-600" onClick={handleLinkClick}>게시판 관리</a>
             </Link>
           </li>

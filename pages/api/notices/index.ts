@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { queryDatabase, QueryResult, querySingleResult } from '@/lib/db';
+import { queryDatabase } from '@/lib/db';
 import formidable from 'formidable';
 import path from 'path';
 import fs from 'fs';
@@ -57,10 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json(notices);
     } catch (error) {
       console.error('Error fetching notices:', error);
-      res.status(500).json({ 
-        message: 'Internal server error', 
-        error: error instanceof Error ? error.message : error 
-      });
+      res.status(500).json({ message: 'Internal server error' });
     }
   } else if (req.method === 'POST') {
     try {
@@ -88,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      const result = await querySingleResult<QueryResult>(
+      const result = await queryDatabase<{ insertId: number }>(
         `INSERT INTO notices (
           title, content, exposure_type, board_ids, 
           expire_date, file_urls, created_at, updated_at
@@ -103,21 +100,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ]
       );
 
-      if (!result) {
+      const insertId = result[0]?.insertId;
+
+      if (!insertId) {
         throw new Error('Failed to create notice');
       }
 
       res.status(201).json({ 
         message: 'Notice created successfully',
-        id: result.insertId,
+        id: insertId,
         fileUrls 
       });
     } catch (error) {
       console.error('Error creating notice:', error);
-      res.status(500).json({ 
-        message: 'Internal server error',
-        error: error instanceof Error ? error.message : error 
-      });
+      res.status(500).json({ message: 'Internal server error' });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });

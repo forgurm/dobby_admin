@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import axiosInstance from '../../lib/axios';
+import { useRouter } from 'next/router';
+import axiosInstance from '@/lib/axios';
+import Popup from '@/components/Popup';
 
 interface Board {
   id: number;
@@ -12,33 +14,63 @@ interface Board {
 
 export default function BoardList() {
   const [boards, setBoards] = useState<Board[]>([]);
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const [isErrorPopupOpen, setErrorPopupOpen] = useState(false);
+  const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchBoards = async () => {
-      try {
-        const response = await axiosInstance.get('/api/boards/board-controller');
-        setBoards(response.data);
-      } catch (error) {
-        console.error('Error fetching boards:', error);
-      }
-    };
-
     fetchBoards();
   }, []);
 
-  const handleDelete = async (boardId: number) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await axiosInstance.delete(`/api/boards/board-detail-controller?id=${boardId}`);
-        setBoards(boards.filter(board => board.id !== boardId));
-      } catch (error) {
-        console.error('Error deleting board:', error);
-      }
+  const fetchBoards = async () => {
+    try {
+      const response = await axiosInstance.get('/api/boards');
+      setBoards(response.data);
+    } catch (error) {
+      console.error('Error fetching boards:', error);
     }
+  };
+
+  const handleDelete = async () => {
+    if (selectedBoardId === null) return;
+
+    try {
+      await axiosInstance.post('/api/boards/delete', { id: selectedBoardId });
+      setPopupOpen(false);
+      router.push('/boards'); // 삭제 후 게시판 목록 페이지로 리다이렉트
+    } catch (error) {
+      console.error('Error deleting board:', error);
+      setErrorMessage('삭제에 실패했습니다.');
+      setPopupOpen(false); // 실패 시에도 팝업 닫기
+      setErrorPopupOpen(true);
+    }
+  };
+
+  const openPopup = (boardId: number) => {
+    setSelectedBoardId(boardId);
+    setPopupOpen(true);
   };
 
   return (
     <div className="p-4">
+      <Popup
+        title="삭제 확인"
+        message="정말 삭제하시겠습니까?"
+        onConfirm={handleDelete}
+        onCancel={() => setPopupOpen(false)}
+        isOpen={isPopupOpen}
+      />
+
+      <Popup
+        title="오류"
+        message={errorMessage}
+        onConfirm={() => setErrorPopupOpen(false)}
+        onCancel={() => setErrorPopupOpen(false)}
+        isOpen={isErrorPopupOpen}
+      />
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">게시판 관리</h1>
         <Link href="/boards/board-create" legacyBehavior>
@@ -90,7 +122,7 @@ export default function BoardList() {
                       <a className="text-blue-500 hover:text-blue-700">수정</a>
                     </Link>
                     <button
-                      onClick={() => handleDelete(board.id)}
+                      onClick={() => openPopup(board.id)}
                       className="text-red-500 hover:text-red-700"
                     >
                       삭제

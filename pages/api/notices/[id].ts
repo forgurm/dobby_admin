@@ -145,11 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         [noticeId]
       );
       
-      if (!result || !result.affectedRows) {
-        return res.status(404).json({ message: 'Notice not found' });
-      }
-      
-      res.status(200).json({ message: 'Notice deleted successfully' });
+      res.status(200).json({ message: '공지사항 삭제 성공' });
     } catch (error) {
       console.error('Error deleting notice:', error);
       res.status(500).json({ 
