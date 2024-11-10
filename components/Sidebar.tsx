@@ -34,7 +34,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, to
             </Link>
           </li>
           <li className="mb-2">
-            <Link href="/board" legacyBehavior>
+            <Link href="/boards/board-list" legacyBehavior>
               <a className="block p-2 bg-gray-700 rounded hover:bg-gray-600" onClick={handleLinkClick}>게시판 관리</a>
             </Link>
           </li>
@@ -51,6 +51,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean, to
           <li className="mb-2">
             <Link href="/chat" legacyBehavior>
               <a className="block p-2 bg-gray-700 rounded hover:bg-gray-600" onClick={handleLinkClick}>채팅 관리</a>
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link href="/notices" legacyBehavior>
+              <a className="block p-2 bg-gray-700 rounded hover:bg-gray-600" onClick={handleLinkClick}>
+                공지사항 관리
+              </a>
             </Link>
           </li>
           <li className="mb-2">

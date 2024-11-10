@@ -21,20 +21,40 @@ if (!globalWithDbPool.dbPool) {
   globalWithDbPool.dbPool = db;
 }
 
-export async function queryDatabase(query: string, params: Array<string | number>) {
-  const connection = await db.getConnection();
+export interface QueryResult {
+  affectedRows?: number;
+  insertId?: number;
+  [key: string]: any;
+}
+
+export async function queryDatabase<T extends QueryResult>(
+  query: string,
+  params?: any[]
+): Promise<T[]> {
   try {
-    const [results] = await connection.execute(query, params);
-    return results;
+    const [rows] = await db.execute(query, params);
+    return rows as T[];
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
-  } finally {
-    connection.release();
   }
 }
 
-export type User = {
+export async function querySingleResult<T extends QueryResult>(
+  query: string, 
+  params: (string | number | null)[]
+): Promise<T | null> {
+  try {
+    const [rows] = await db.execute(query, params);
+    const results = rows as T[];
+    return results.length > 0 ? results[0] : null;
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+}
+
+export interface User {
   no: number;
   emailid: string;
   name: string;
@@ -49,4 +69,4 @@ export type User = {
   creat_dt: Date;
   update_dt: Date;
   password?: string;
-};
+}

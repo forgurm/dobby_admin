@@ -1,0 +1,44 @@
+/* 모드 스위치와 탭 관련 모든 요소 숨기기 */
+.editorWrapper :global(.toastui-editor-mode-switch),
+.editorWrapper :global(.toastui-editor-tabs),
+.editorWrapper :global(.toastui-editor-write-mode),
+.editorWrapper :global(.toastui-editor-preview-mode),
+.editorWrapper :global(.toastui-editor-tab-item),
+.editorWrapper :global(.toastui-editor-md-tab-container),
+.editorWrapper :global(.toastui-editor-tab-container) {
+  display: none !important;
+}
+
+/* 에디터 기본 스타일 */
+.editorWrapper :global(.toastui-editor-defaultUI) {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+}
+
+.editorWrapper :global(.toastui-editor-defaultUI .toastui-editor) {
+  background-color: #fff;
+}
+
+.editorWrapper :global(.toastui-editor-defaultUI .ProseMirror) {
+  padding: 16px;
+}
+
+/* 구분선 스타일링 */
+.editorWrapper :global(.toastui-editor-toolbar) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 불필요한 여백 제거 */
+.editorWrapper :global(.toastui-editor-main) {
+  padding: 0 !important;
+}
+
+/* 추가적인 스타일 - 플레이스홀더와 탭 관련 */
+.editorWrapper :global(.toastui-editor-md-container),
+.editorWrapper :global(.toastui-editor-ww-container) {
+  background-color: #fff;
+}
+
+.editorWrapper :global(.toastui-editor-defaultUI .ProseMirror p.placeholder) {
+  display: none !important;
+} 

@@ -105,7 +105,7 @@ export default function Members({ users: initialUsers }: MembersPageProps) {
 
   // useCallback으로 applyFilters 감싸기
   const applyFilters = useCallback(async () => {
-    console.log('Client - Applying filters:', searchFilters);
+    //console.log('Client - Applying filters:', searchFilters);
     try {
       const response = await fetch('/api/users/search', {
         method: 'POST',

@@ -2,17 +2,18 @@
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        net: false,
-        tls: false,
-        fs: false,
-        dns: false,
-        'mysql2/promise': false,
-      };
-    }
+    // 웹팩 설정 수정
+    config.experiments = {
+      ...config.experiments,
+      topLevelAwait: true,
+    };
+
+    // 기존 설정 유지
     return config;
+  },
+  // API 라우트에서 formidable 사용을 위한 설정
+  api: {
+    bodyParser: false,
   },
 };
 
