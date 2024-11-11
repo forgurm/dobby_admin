@@ -27,6 +27,4 @@ export default function BoardEdit() {
       fetchBoard();
     }
   }, [id]);
-
-  // ... 나머지 코드
 } 

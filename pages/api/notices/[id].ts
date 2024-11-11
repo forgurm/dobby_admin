@@ -144,7 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'DELETE FROM notices WHERE id = ?',
         [noticeId]
       );
-      
+      console.log(result);
       res.status(200).json({ message: '공지사항 삭제 성공' });
     } catch (error) {
       console.error('Error deleting notice:', error);

@@ -37,9 +37,11 @@ export default function BoardList() {
     if (selectedBoardId === null) return;
 
     try {
-      await axiosInstance.post('/api/boards/delete', { id: selectedBoardId });
+      const response = await axiosInstance.post('/api/boards/delete', { id: selectedBoardId });
+      //console.log('게시판 삭제:', response);
       setPopupOpen(false);
-      router.push('/boards'); // 삭제 후 게시판 목록 페이지로 리다이렉트
+      fetchBoards(); // 목록 새로고침
+      //router.push('/boards'); // 삭제 후 게시판 목록 페이지로 리다이렉트
     } catch (error) {
       console.error('Error deleting board:', error);
       setErrorMessage('삭제에 실패했습니다.');

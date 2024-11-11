@@ -93,7 +93,8 @@ export default function NoticeList() {
     if (selectedNoticeId === null) return;
 
     try {
-      await axiosInstance.delete(`/api/notices/${selectedNoticeId}`);
+      const response = await axiosInstance.delete(`/api/notices/${selectedNoticeId}`);
+      console.log('공지사항 삭제:', response);
       setPopupOpen(false);
       fetchNotices(); // 목록 새로고침
     } catch (error) {
