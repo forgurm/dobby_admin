@@ -140,11 +140,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (req.method === 'DELETE') {
     try {
-      const result = await querySingleResult<QueryResult>(
+      console.log('Deleting notice with ID:', noticeId);
+      const result = await queryDatabase(
         'DELETE FROM notices WHERE id = ?',
         [noticeId]
       );
-      console.log(result);
+      console.log('Delete result:', result);
+      if (!result) {
+        console.error('No result returned from query');
+        return res.status(500).json({ message: 'Failed to delete notice' });
+      }
+
+
       res.status(200).json({ message: '공지사항 삭제 성공' });
     } catch (error) {
       console.error('Error deleting notice:', error);

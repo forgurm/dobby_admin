@@ -16,6 +16,15 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+interface ResultSetHeader {
+  fieldCount: number;
+  affectedRows: number;
+  insertId: number;
+  info: string;
+  serverStatus: number;
+  warningStatus: number;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
@@ -85,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      const result = await queryDatabase<{ insertId: number }>(
+      const result = await queryDatabase<ResultSetHeader[]>(
         `INSERT INTO notices (
           title, content, exposure_type, board_ids, 
           expire_date, file_urls, created_at, updated_at
@@ -100,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ]
       );
 
-      const insertId = result[0]?.insertId;
+      const insertId = result[0];
 
       if (!insertId) {
         throw new Error('Failed to create notice');
@@ -113,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } catch (error) {
       console.error('Error creating notice:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : error });
     }
   } else {
     res.status(405).json({ message: 'Method not allowed' });
